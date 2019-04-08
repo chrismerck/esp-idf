@@ -102,6 +102,13 @@ void esp_spiram_writeback_cache();
  */
 esp_err_t esp_spiram_reserve_dma_pool(size_t size);
 
+/**
+ * @brief Get ID of PSRAM installed
+ *
+ * @return
+ *          uint32_t ID
+ */
+uint32_t esp_get_spiram_id();
 
 /**
  * @brief If SPI RAM(PSRAM) has been initialized

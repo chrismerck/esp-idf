@@ -400,6 +400,11 @@ static void psram_disable_qio_mode(psram_spi_num_t spi_num)
 }
 
 //read psram id
+static uint32_t PSRAM_ID;
+uint32_t esp_get_spiram_id(){
+  return PSRAM_ID;
+}
+
 static void psram_read_id(uint32_t* dev_id)
 {
     psram_spi_num_t spi_num = PSRAM_SPI_1;
@@ -429,13 +434,14 @@ static void psram_read_id(uint32_t* dev_id)
     ps_cmd.txDataBitLen = 0;
     ps_cmd.txData = NULL;
     ps_cmd.rxDataBitLen = 4 * 8;
-    ps_cmd.rxData = dev_id;
+    ps_cmd.rxData = &PSRAM_ID;
     ps_cmd.dummyBitLen = dummy_bits;
 
     psram_cmd_config(spi_num, &ps_cmd);
     psram_clear_spi_fifo(spi_num);
     psram_cmd_recv_start(spi_num, ps_cmd.rxData, ps_cmd.rxDataBitLen / 8, PSRAM_CMD_SPI);
     psram_cmd_end(spi_num);
+    *dev_id=PSRAM_ID;
 }
 
 //enter QPI mode

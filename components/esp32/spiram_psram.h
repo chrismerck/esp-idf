@@ -67,4 +67,6 @@ psram_size_t psram_get_size();
  */
 esp_err_t psram_enable(psram_cache_mode_t mode, psram_vaddr_mode_t vaddrmode);
 
+uint32_t esp_get_spiram_id();
+
 #endif
