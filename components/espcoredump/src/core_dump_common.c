@@ -22,6 +22,11 @@ const static DRAM_ATTR char TAG[] __attribute__((unused)) = "esp_core_dump_commo
 
 #if CONFIG_ESP32_ENABLE_COREDUMP
 
+#if CONFIG_ESP32_CORE_DUMP_USERDATA
+    extern uint32_t esp_core_dump_userdata_get_len();
+    extern void * esp_core_dump_userdata_get();
+#endif
+
 static esp_err_t esp_core_dump_write_binary(void *frame, core_dump_write_config_t *write_cfg)
 {
     esp_err_t err;
@@ -64,10 +69,15 @@ static esp_err_t esp_core_dump_write_binary(void *frame, core_dump_write_config_
             write_cfg->bad_tasks_num++;
         }
     }
+    // add optional user data
+    #if CONFIG_ESP32_CORE_DUMP_USERDATA
+      data_len += esp_core_dump_userdata_get_len();
+      ESP_COREDUMP_LOG_PROCESS("Found userdata = %lu", esp_core_dump_userdata_get_len());
+    #endif
     // Add core dump header size
     data_len += sizeof(core_dump_header_t);
     ESP_COREDUMP_LOG_PROCESS("Core dump len = %lu (%d %d)", data_len, task_num, write_cfg->bad_tasks_num);
-   
+
     // Prepare write
     if (write_cfg->prepare) {
         err = write_cfg->prepare(write_cfg->priv, &data_len);
@@ -84,6 +94,15 @@ static esp_err_t esp_core_dump_write_binary(void *frame, core_dump_write_config_
             return err;
         }
     }
+    // Write optional userdata
+    #if CONFIG_ESP32_CORE_DUMP_USERDATA
+        // Save userdata
+        err = write_cfg->write(write_cfg->priv, esp_core_dump_userdata_get(), esp_core_dump_userdata_get_len());
+        if (err != ESP_OK) {
+            ESP_COREDUMP_LOGE("Failed to write userdata (%d)!", err);
+            return err;
+        }
+    #endif
     // Write header
     dump_data.hdr.data_len  = data_len;
     dump_data.hdr.version   = COREDUMP_VERSION;
